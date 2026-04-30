@@ -17,7 +17,7 @@ A sophisticated, industrial-grade storage management interface designed for high
 
 > **PRO TIP:** To add your own video here, upload your screen recording to a service like YouTube or Vimeo and replace the link below:
 > 
-> [![Watch the Demo](https://img.shields.io/badge/Watch_Demo_Video-Play-red?style=for-the-badge&logo=youtube)](YOUR_VIDEO_URL_HERE)
+> [![Watch the Demo](https://img.shields.io/badge/Watch_Demo_Video-Play-red?style=for-the-badge&logo=youtube)]([YOUR_VIDEO_URL_HERE](https://github.com/Subhagaya-Git/Multi-Tenant-Enterprise-Cloud-Drive/blob/76495581a6125eff31182b5c1d91330da498623e/Final.mp4))
 
 ---
 
@@ -71,11 +71,3 @@ Utilize the Gemini AI Sidebar for natural language queries regarding your file c
 This console implements RBAC (Role-Based Access Control) simulations and utilizes SAS (Shared Access Signatures) to ensure granular security. For production deployments, it is recommended to proxy all storage requests through a secure backend (e.g., Node.js or Azure Functions) to prevent client-side credential exposure.
 
 Optimized for Industrial Cloud Management and Enterprise Data Workflows.
-
-
----
-
-### 💡 How to add your actual video:
-1. **The YouTube Method:** Upload your video to YouTube. Then, in the `README.md` above, replace `YOUR_VIDEO_URL_HERE` with your actual video link.
-2. **The GIF Method (Best for GitHub):** If your video is short, convert it to a `.gif`. Upload the `.gif` to your GitHub repo and replace the "Interface Preview" placeholder with your file path:
-   `![Dashboard Overview](assets/demo.gif)`
