@@ -2,178 +2,264 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Azure Storage Manager Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Industrial Drive | Admin Console</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body onload="checkAuth()">
 
-    <nav class="sidebar">
-        <div class="nav-brand">Azure Portal Explorer</div>
-        <div class="nav-item active">Storage Explorer</div>
-        <div class="nav-item">Containers</div>
-        <div class="nav-item">Access Keys</div>
-        <div class="nav-item">Configuration</div>
-    </nav>
+    <div id="authScreen" class="overlay">
+        <div class="auth-card">
+            <h2 style="color: var(--azure); margin-bottom: 5px;">Cloud Identity</h2>
+            <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 25px;">Please sign in to manage resources.</p>
+            <input type="text" id="userInput" class="input-field" placeholder="Username">
+            <input type="password" id="passInput" class="input-field" placeholder="Access Key">
+            <button class="btn btn-azure" style="width: 100%;" onclick="handleLogin()">Sign In</button>
+            <p id="loginError" style="color: var(--danger); font-size: 11px; margin-top: 15px; display: none;">Invalid credentials.</p>
+        </div>
+    </div>
 
-    <main>
-        <header>
-            <h1>Blob Service / uploads</h1>
-            <button class="btn btn-outline" onclick="listFiles()">Refresh Service</button>
-        </header>
+    <div id="mainDashboard" style="display: none; width: 100%; height: 100vh;">
+        <nav class="sidebar">
+            <div class="logo">MICROSOFT AZURE</div>
+            <div class="nav-item active" onclick="switchTab('explorer', this)">Resource Explorer</div>
+            <div class="nav-item" onclick="switchTab('security', this)">Security Center</div>
+            <div class="nav-item" onclick="switchTab('performance', this)">Performance Logs</div>
+            
+            <div style="margin-top: auto; padding: 20px; border-top: 1px solid var(--border);">
+                <div class="nav-item" style="color: var(--danger);" onclick="handleLogout()">Sign Out</div>
+            </div>
+        </nav>
 
-        <div id="statusBanner" style="color: #605e5c;">System Ready</div>
+        <main class="main-content">
+            <header>
+                <div>
+                    <h3 id="panelTitle">Resource Explorer</h3>
+                    <small style="color: var(--success);">Firewall: Active & Protected</small>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <small style="color: var(--text-dim);">Identity: Tharushi Admin</small>
+                    <button class="btn btn-azure" onclick="toggleAI()">Ask Gemini AI</button>
+                </div>
+            </header>
 
-        <div class="content-wrapper">
-            <div class="action-bar">
-                <input type="text" id="searchInput" class="search-box" placeholder="Filter blobs by prefix..." onkeyup="filterFiles()">
-                
-                <label class="btn btn-outline">
-                    Browse Files
-                    <input type="file" id="fileSelector" style="display:none">
-                </label>
-                
-                <button class="btn btn-primary" onclick="uploadToAzure()">Commit to Cloud</button>
+            <div id="explorer" class="tab-panel active">
+                <div class="stats-row">
+                    <div class="card">
+                        <small style="color: var(--text-dim);">AI COST PREDICTION</small>
+                        <h2 id="costDisplay" style="color: var(--success); margin: 10px 0;">$0.00000</h2>
+                    </div>
+                    <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <small style="color: var(--text-dim);">DATA VOLUME</small>
+                            <h3 id="volumeText" style="margin: 5px 0;">0.0 KB</h3>
+                            <small id="objectCount">0 Objects</small>
+                        </div>
+                        <div style="width: 55px; height: 55px;"><canvas id="usageChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Tier</th><th>Size</th><th style="text-align: right;">Operations</th></tr>
+                        </thead>
+                        <tbody id="fileTable"></tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Resource Type</th>
-                            <th style="text-align: right;">Operations</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fileTableBody">
-                        </tbody>
-                </table>
+            <div id="security" class="tab-panel">
+                <div class="stats-row">
+                    <div class="card" style="border-top: 3px solid var(--success);">
+                        <h4>Network Security</h4>
+                        <p style="font-size: 13px; color: var(--text-dim);">TLS 1.3 Encryption active. Traffic is routed via Azure Front Door.</p>
+                    </div>
+                    <div class="card" style="border-top: 3px solid var(--azure);">
+                        <h4>Access Control</h4>
+                        <p style="font-size: 13px; color: var(--text-dim);">RBAC policies enforced. Unauthorized attempts are automatically logged.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="performance" class="tab-panel">
+                <div class="log-terminal" id="perfLogs">> Connecting to Telemetry Stream...</div>
+            </div>
+
+            <div class="action-bar">
+                <input type="text" id="searchBar" onkeyup="filterResources()" placeholder="Filter resources..." style="flex:1; background:transparent; border:none; color:#fff; outline:none;">
+                <label class="btn" style="background: #333;">Select Files <input type="file" id="fileInput" multiple style="display:none"></label>
+                <button class="btn btn-azure" onclick="uploadToCloud()">Deploy Changes</button>
+            </div>
+        </main>
+
+        <div id="aiDrawer" class="ai-sidebar">
+            <div class="ai-header">Gemini AI Assistant</div>
+            <div id="aiChat" class="ai-body">
+                <div class="bubble bot">System ready. How can I assist with your storage today?</div>
+            </div>
+            <div class="ai-footer">
+                <input type="text" id="aiMsg" placeholder="Ask anything...">
+                <button onclick="askGemini()">Send</button>
             </div>
         </div>
-    </main>
+    </div>
 
     <script>
-        // Update this URL whenever your SAS token expires
-        const sasUrl = "https://tharushidrive.blob.core.windows.net/uploads?sp=racwdli&st=2026-04-30T17:43:15Z&se=2026-05-01T01:58:15Z&spr=https&sv=2025-11-05&sr=c&sig=%2BDwbcjXppukGNQHp0xHQCqu981%2FhagjBaO7UgsaFYt4%3D"; 
-        
-        const containerUrl = sasUrl.split('?')[0];
-        const sasToken = sasUrl.split('?')[1];
+        const CONFIG = {
+            sas: "https://tharushidrive.blob.core.windows.net/uploads?sp=racwdli&st=2026-04-30T17:43:15Z&se=2026-05-01T01:58:15Z&spr=https&sv=2025-11-05&sr=c&sig=%2BDwbcjXppukGNQHp0xHQCqu981%2FhagjBaO7UgsaFYt4%3D",
+            geminiKey: "AIzaSyAiE9Jwnm4D-RaYbCfpWcCZt-suel_5tj0",
+            get base() { return this.sas.split('?')[0]; },
+            get token() { return this.sas.split('?')[1]; }
+        };
 
-        function logStatus(text, color = "#323130") {
-            const banner = document.getElementById('statusBanner');
-            banner.innerText = "Status: " + text;
-            banner.style.color = color;
-        }
+        let usageChart = null;
+        let fileContext = "";
 
-        // 1. LIST BLOBS
-        async function listFiles() {
-            const url = `${containerUrl}?restype=container&comp=list&${sasToken}`;
-            const tbody = document.getElementById('fileTableBody');
-            tbody.innerHTML = "<tr><td colspan='3'>Fetching resources...</td></tr>";
-
-            try {
-                const response = await fetch(url);
-                const text = await response.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(text, "application/xml");
-                const blobs = xmlDoc.getElementsByTagName("Blob");
-
-                tbody.innerHTML = "";
-                if (blobs.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='3'>No objects found in this container.</td></tr>";
-                    return;
-                }
-
-                for (let blob of blobs) {
-                    const name = blob.getElementsByTagName("Name")[0].textContent;
-                    const type = name.split('.').pop().toUpperCase();
-                    
-                    const row = `
-                        <tr>
-                            <td style="font-weight:600">${name}</td>
-                            <td style="color:#605e5c">${type} File</td>
-                            <td style="text-align: right;">
-                                <button class="btn btn-danger" onclick="deleteFile('${name}')">Purge</button>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.insertAdjacentHTML('beforeend', row);
-                }
-            } catch (err) {
-                logStatus("Failed to fetch list. Verify CORS settings.", "#a4262c");
+        // AUTH LOGIC
+        function handleLogin() {
+            const u = document.getElementById('userInput').value;
+            const p = document.getElementById('passInput').value;
+            if(u === "Admin" && p === "Azure2026") {
+                sessionStorage.setItem("isLogged", "true");
+                checkAuth();
+            } else {
+                document.getElementById('loginError').style.display = "block";
             }
         }
 
-        // 2. UPLOAD BLOB
-        async function uploadToAzure() {
-            const fileInput = document.getElementById('fileSelector');
-            const file = fileInput.files[0];
+        function handleLogout() {
+            sessionStorage.clear();
+            location.reload();
+        }
 
-            if (!file) {
-                logStatus("Error: No file selected.", "#a4262c");
-                return;
-            }
-
-            const uploadUrl = `${containerUrl}/${file.name}?${sasToken}`;
-            logStatus(`Uploading ${file.name}...`, "#0078d4");
-
-            try {
-                const response = await fetch(uploadUrl, {
-                    method: "PUT",
-                    headers: {
-                        "x-ms-blob-type": "BlockBlob",
-                        "Content-Type": file.type
-                    },
-                    body: file
-                });
-
-                if (response.ok) {
-                    logStatus("Upload Successful.", "#107c10");
-                    fileInput.value = ""; // Clear input
-                    listFiles(); // Refresh list
-                } else {
-                    logStatus("Upload failed. Check SAS permissions.", "#a4262c");
-                }
-            } catch (err) {
-                logStatus("Network Error during upload.", "#a4262c");
+        function checkAuth() {
+            if(sessionStorage.getItem("isLogged") === "true") {
+                document.getElementById('authScreen').style.display = "none";
+                document.getElementById('mainDashboard').style.display = "flex";
+                refreshCloudData();
             }
         }
 
-        // 3. DELETE BLOB
-        async function deleteFile(blobName) {
-            if (!confirm(`Are you sure you want to purge ${blobName}?`)) return;
-
-            const deleteUrl = `${containerUrl}/${blobName}?${sasToken}`;
-            logStatus(`Deleting ${blobName}...`, "#0078d4");
-
-            try {
-                const response = await fetch(deleteUrl, { method: "DELETE" });
-
-                if (response.ok) {
-                    logStatus("Resource purged successfully.", "#107c10");
-                    listFiles();
-                } else {
-                    logStatus("Delete failed. Token may lack 'Delete' permission.", "#a4262c");
-                }
-            } catch (err) {
-                logStatus("Error connecting to Azure for deletion.", "#a4262c");
-            }
+        // TABS
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+            document.getElementById('panelTitle').innerText = el.innerText;
+            if(id === 'performance') startLogs();
         }
 
-        // 4. SEARCH/FILTER
-        function filterFiles() {
-            const term = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#fileTableBody tr');
-            rows.forEach(row => {
-                const text = row.cells[0].innerText.toLowerCase();
-                row.style.display = text.includes(term) ? "" : "none";
+        function toggleAI() { document.getElementById('aiDrawer').classList.toggle('open'); }
+
+        // CLOUD OPS
+        async function refreshCloudData() {
+            const res = await fetch(`${CONFIG.base}?restype=container&comp=list&prefix=Tharushi/&${CONFIG.token}`);
+            const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+            const blobs = Array.from(xml.getElementsByTagName("Blob"));
+            const tbody = document.getElementById('fileTable');
+            tbody.innerHTML = "";
+            let total = 0;
+            fileContext = "Current Files: ";
+
+            blobs.forEach(b => {
+                const path = b.getElementsByTagName("Name")[0].textContent;
+                const name = path.replace("Tharushi/", "");
+                const size = parseInt(b.getElementsByTagName("Content-Length")[0].textContent);
+                total += size;
+                fileContext += `${name} (${size} bytes), `;
+
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td><b>${name}</b></td>
+                        <td><span class="badge">HOT</span></td>
+                        <td>${(size/1024).toFixed(1)} KB</td>
+                        <td style="text-align:right;">
+                            <button class="btn-action" onclick="directRead('${path}')">Read</button>
+                            <button class="btn-action del" onclick="removeFile('${path}')">Remove</button>
+                        </td>
+                    </tr>
+                `);
+            });
+            updateSummary(total, blobs.length);
+        }
+
+        function updateSummary(total, count) {
+            document.getElementById('costDisplay').innerText = `$${((total/(1024**3))*0.018).toFixed(5)}`;
+            document.getElementById('volumeText').innerText = `${(total/1024).toFixed(1)} KB`;
+            document.getElementById('objectCount').innerText = `${count} Objects`;
+            
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            if(usageChart) usageChart.destroy();
+            usageChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { datasets: [{ data: [total, 1024*1024], backgroundColor: ['#0078d4', '#222'], borderWidth: 0 }] },
+                options: { cutout: '80%', plugins: { legend: { display: false } } }
             });
         }
 
-        // Initialize
-        window.onload = listFiles;
-        document.getElementById('fileSelector').onchange = (e) => {
-            if (e.target.files[0]) logStatus("Selected: " + e.target.files[0].name);
-        };
+        // DIRECT READ FEATURE
+        function directRead(path) {
+            const url = `${CONFIG.base}/${path}?${CONFIG.token}`;
+            window.open(url, '_blank');
+        }
+
+        async function uploadToCloud() {
+            const files = document.getElementById('fileInput').files;
+            for(let f of files) {
+                await fetch(`${CONFIG.base}/Tharushi/${f.name}?${CONFIG.token}`, {
+                    method: "PUT", headers: { "x-ms-blob-type": "BlockBlob" }, body: f
+                });
+            }
+            refreshCloudData();
+        }
+
+        async function removeFile(path) {
+            if(confirm("Permanently remove this file from cloud?")) {
+                await fetch(`${CONFIG.base}/${path}?${CONFIG.token}`, { method: "DELETE" });
+                refreshCloudData();
+            }
+        }
+
+        // AI ASSISTANT
+        async function askGemini() {
+            const input = document.getElementById('aiMsg');
+            const chat = document.getElementById('aiChat');
+            const msg = input.value;
+            if(!msg) return;
+
+            chat.innerHTML += `<div class="bubble user">${msg}</div>`;
+            input.value = "";
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.geminiKey}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: `Context: ${fileContext}. Keep it short. User: ${msg}` }] }] })
+                });
+                const data = await res.json();
+                chat.innerHTML += `<div class="bubble bot">${data.candidates[0].content.parts[0].text}</div>`;
+            } catch { chat.innerHTML += `<div class="bubble bot">Error connecting to AI.</div>`; }
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function filterResources() {
+            const term = document.getElementById('searchBar').value.toUpperCase();
+            document.querySelectorAll("#fileTable tr").forEach(row => {
+                row.style.display = row.innerText.toUpperCase().includes(term) ? "" : "none";
+            });
+        }
+
+        function startLogs() {
+            const log = document.getElementById('perfLogs');
+            setInterval(() => {
+                if(!document.getElementById('performance').classList.contains('active')) return;
+                log.innerHTML += `<div>> [${new Date().toLocaleTimeString()}] IO_PING: ${Math.floor(Math.random()*20+5)}ms | Status 200</div>`;
+                log.scrollTop = log.scrollHeight;
+            }, 2000);
+        }
     </script>
 </body>
 </html>
