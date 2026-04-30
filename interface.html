@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Azure Storage Manager Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="nav-brand">Azure Portal Explorer</div>
+        <div class="nav-item active">Storage Explorer</div>
+        <div class="nav-item">Containers</div>
+        <div class="nav-item">Access Keys</div>
+        <div class="nav-item">Configuration</div>
+    </nav>
+
+    <main>
+        <header>
+            <h1>Blob Service / uploads</h1>
+            <button class="btn btn-outline" onclick="listFiles()">Refresh Service</button>
+        </header>
+
+        <div id="statusBanner" style="color: #605e5c;">System Ready</div>
+
+        <div class="content-wrapper">
+            <div class="action-bar">
+                <input type="text" id="searchInput" class="search-box" placeholder="Filter blobs by prefix..." onkeyup="filterFiles()">
+                
+                <label class="btn btn-outline">
+                    Browse Files
+                    <input type="file" id="fileSelector" style="display:none">
+                </label>
+                
+                <button class="btn btn-primary" onclick="uploadToAzure()">Commit to Cloud</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Resource Type</th>
+                            <th style="text-align: right;">Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Update this URL whenever your SAS token expires
+        const sasUrl = "https://tharushidrive.blob.core.windows.net/uploads?sp=racwdli&st=2026-04-30T17:43:15Z&se=2026-05-01T01:58:15Z&spr=https&sv=2025-11-05&sr=c&sig=%2BDwbcjXppukGNQHp0xHQCqu981%2FhagjBaO7UgsaFYt4%3D"; 
+        
+        const containerUrl = sasUrl.split('?')[0];
+        const sasToken = sasUrl.split('?')[1];
+
+        function logStatus(text, color = "#323130") {
+            const banner = document.getElementById('statusBanner');
+            banner.innerText = "Status: " + text;
+            banner.style.color = color;
+        }
+
+        // 1. LIST BLOBS
+        async function listFiles() {
+            const url = `${containerUrl}?restype=container&comp=list&${sasToken}`;
+            const tbody = document.getElementById('fileTableBody');
+            tbody.innerHTML = "<tr><td colspan='3'>Fetching resources...</td></tr>";
+
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "application/xml");
+                const blobs = xmlDoc.getElementsByTagName("Blob");
+
+                tbody.innerHTML = "";
+                if (blobs.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='3'>No objects found in this container.</td></tr>";
+                    return;
+                }
+
+                for (let blob of blobs) {
+                    const name = blob.getElementsByTagName("Name")[0].textContent;
+                    const type = name.split('.').pop().toUpperCase();
+                    
+                    const row = `
+                        <tr>
+                            <td style="font-weight:600">${name}</td>
+                            <td style="color:#605e5c">${type} File</td>
+                            <td style="text-align: right;">
+                                <button class="btn btn-danger" onclick="deleteFile('${name}')">Purge</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                }
+            } catch (err) {
+                logStatus("Failed to fetch list. Verify CORS settings.", "#a4262c");
+            }
+        }
+
+        // 2. UPLOAD BLOB
+        async function uploadToAzure() {
+            const fileInput = document.getElementById('fileSelector');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                logStatus("Error: No file selected.", "#a4262c");
+                return;
+            }
+
+            const uploadUrl = `${containerUrl}/${file.name}?${sasToken}`;
+            logStatus(`Uploading ${file.name}...`, "#0078d4");
+
+            try {
+                const response = await fetch(uploadUrl, {
+                    method: "PUT",
+                    headers: {
+                        "x-ms-blob-type": "BlockBlob",
+                        "Content-Type": file.type
+                    },
+                    body: file
+                });
+
+                if (response.ok) {
+                    logStatus("Upload Successful.", "#107c10");
+                    fileInput.value = ""; // Clear input
+                    listFiles(); // Refresh list
+                } else {
+                    logStatus("Upload failed. Check SAS permissions.", "#a4262c");
+                }
+            } catch (err) {
+                logStatus("Network Error during upload.", "#a4262c");
+            }
+        }
+
+        // 3. DELETE BLOB
+        async function deleteFile(blobName) {
+            if (!confirm(`Are you sure you want to purge ${blobName}?`)) return;
+
+            const deleteUrl = `${containerUrl}/${blobName}?${sasToken}`;
+            logStatus(`Deleting ${blobName}...`, "#0078d4");
+
+            try {
+                const response = await fetch(deleteUrl, { method: "DELETE" });
+
+                if (response.ok) {
+                    logStatus("Resource purged successfully.", "#107c10");
+                    listFiles();
+                } else {
+                    logStatus("Delete failed. Token may lack 'Delete' permission.", "#a4262c");
+                }
+            } catch (err) {
+                logStatus("Error connecting to Azure for deletion.", "#a4262c");
+            }
+        }
+
+        // 4. SEARCH/FILTER
+        function filterFiles() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#fileTableBody tr');
+            rows.forEach(row => {
+                const text = row.cells[0].innerText.toLowerCase();
+                row.style.display = text.includes(term) ? "" : "none";
+            });
+        }
+
+        // Initialize
+        window.onload = listFiles;
+        document.getElementById('fileSelector').onchange = (e) => {
+            if (e.target.files[0]) logStatus("Selected: " + e.target.files[0].name);
+        };
+    </script>
+</body>
+</html>

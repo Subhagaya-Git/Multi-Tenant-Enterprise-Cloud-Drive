@@ -1,0 +1,67 @@
+:root {
+    --side-bg: #201f1e;
+    --side-hover: #323130;
+    --azure-blue: #0078d4;
+    --bg-main: #f3f2f1;
+    --card-white: #ffffff;
+    --text-primary: #323130;
+    --text-muted: #605e5c;
+    --border: #edebe9;
+    --danger: #a4262c;
+    --success: #107c10;
+}
+
+* { box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+nav.sidebar {
+    width: 260px;
+    background-color: var(--side-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+.nav-brand { padding: 24px; font-size: 18px; font-weight: 700; color: #fff; border-bottom: 1px solid #323130; }
+.nav-item { padding: 12px 24px; font-size: 14px; cursor: pointer; color: #d2d0ce; }
+.nav-item:hover { background: var(--side-hover); color: white; }
+.nav-item.active { background: var(--azure-blue); color: white; border-left: 4px solid #fff; }
+
+/* Main Content */
+main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+header { background: #fff; padding: 15px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.content-wrapper { padding: 30px 40px; }
+
+/* Control Bar */
+.action-bar {
+    background: white;
+    padding: 20px;
+    border: 1px solid var(--border);
+    display: flex; gap: 10px; align-items: center;
+    margin-bottom: 20px;
+}
+.search-box { flex: 1; padding: 8px 12px; border: 1px solid #8a8886; }
+
+/* Table */
+.table-container { background: white; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; color: var(--text-muted); padding: 12px 20px; border-bottom: 1px solid var(--border); background: #faf9f8; }
+td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid var(--border); }
+tr:hover { background-color: #f3f2f1; }
+
+/* Buttons */
+.btn { border: none; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-primary { background: var(--azure-blue); color: white; }
+.btn-outline { background: white; border: 1px solid #8a8886; }
+.btn-danger { color: var(--danger); background: none; }
+.btn-danger:hover { background: #fde7e9; }
+
+/* Toast/Status */
+#statusBanner { padding: 10px 40px; font-size: 13px; background: #fff; border-bottom: 1px solid var(--border); font-weight: 600; }
