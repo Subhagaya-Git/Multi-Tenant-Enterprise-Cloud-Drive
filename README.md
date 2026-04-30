@@ -5,19 +5,16 @@
 ![Security](https://img.shields.io/badge/Security-TLS_1.3-success)
 ![Interface](https://img.shields.io/badge/UI-Industrial_Dark-black)
 
-A sophisticated, industrial-grade storage management interface designed for high-availability cloud environments. This console facilitates seamless interaction with Azure Blob Storage, real-time telemetry monitoring, and AI-assisted resource optimization.
+A high-performance, industrial-grade storage management interface designed for high-availability cloud environments. This console facilitates seamless interaction with Azure Blob Storage, real-time telemetry monitoring, and AI-assisted resource optimization.
 
 ---
 
 ## 📺 System Demonstration
+Below is a walkthrough of the Multi-Tenant Enterprise Cloud Drive interface, showcasing the authentication flow, resource explorer, and AI integration.
 
-| Interface Preview | AI Assistant & Telemetry |
-| :---: | :---: |
-| ![Dashboard Overview](https://via.placeholder.com/600x350/111111/0078d4?text=Dashboard+UI+Preview) | ![AI Sidebar](https://via.placeholder.com/400x350/161616/2ecc71?text=Gemini+AI+Interaction) |
-
-> **PRO TIP:** To add your own video here, upload your screen recording to a service like YouTube or Vimeo and replace the link below:
-> 
-> [![Watch the Demo](https://img.shields.io/badge/Watch_Demo_Video-Play-red?style=for-the-badge&logo=youtube)]([YOUR_VIDEO_URL_HERE](https://github.com/Subhagaya-Git/Multi-Tenant-Enterprise-Cloud-Drive/blob/76495581a6125eff31182b5c1d91330da498623e/Final.mp4))
+<video src="https://github.com/Subhagaya-Git/Multi-Tenant-Enterprise-Cloud-Drive/blob/21033553082b07b59bb9383e1a170e9d820e2029/Final.mp4" controls="controls" style="max-width: 100%;">
+  Your browser does not support the video tag.
+</video>
 
 ---
 
@@ -56,16 +53,16 @@ const CONFIG = {
     geminiKey: "YOUR_GEMINI_API_KEY"
 };
 2. Authentication Protocol
-Access to the dashboard is protected by a secure local identity provider. Standard administrative credentials are required to bypass the Cloud Identity overlay.
+Access to the dashboard is protected by a secure local identity provider. Standard administrative credentials are required to bypass the Cloud Identity overlay and access the resource management features.
 
-3. Usage
+3. Usage Instructions
 Launch the application via any modern browser environment.
 
 Authenticate via the Cloud Identity secure portal.
 
 Monitor real-time Performance Logs to ensure low-latency IO operations.
 
-Utilize the Gemini AI Sidebar for natural language queries regarding your file context.
+Utilize the Gemini AI Sidebar for natural language queries regarding your storage context.
 
 🔒 Security & Compliance
 This console implements RBAC (Role-Based Access Control) simulations and utilizes SAS (Shared Access Signatures) to ensure granular security. For production deployments, it is recommended to proxy all storage requests through a secure backend (e.g., Node.js or Azure Functions) to prevent client-side credential exposure.
